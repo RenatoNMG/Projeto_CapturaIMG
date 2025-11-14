@@ -134,9 +134,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final primary = const Color(0xFF0C1D34);
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F4F7),
+
       appBar: AppBar(
         title: Text(widget.title),
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        elevation: 6,
+        shadowColor: Colors.black45,
         actions: [
           IconButton(
             icon: const Icon(Icons.my_location),
@@ -148,51 +156,93 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+
       body: SafeArea(
         child: Column(
           children: [
+            const SizedBox(height: 12),
+
+            /// Botões
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   Expanded(
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Capturar foto'),
-                      onPressed: _loading ? null : _capturePhoto,
+                    child: _styledButton(
+                      icon: Icons.camera_alt,
+                      text: "Capturar foto",
+                      onTap: _loading ? null : _capturePhoto,
+                      color: primary,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.photo_library),
-                      label: const Text('Escolher da galeria'),
-                      onPressed: _loading ? null : _pickFromGallery,
+                    child: _styledButton(
+                      icon: Icons.photo_library,
+                      text: "Galeria",
+                      onTap: _loading ? null : _pickFromGallery,
+                      color: Colors.deepPurple,
                     ),
                   ),
                 ],
               ),
             ),
 
+            const SizedBox(height: 12),
+
+            /// Localização + Loader
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Row(
-                children: [
-                  Expanded(child: Text(_locationText)),
-                  if (_loading)
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 6,
+                      color: Colors.black12,
+                      offset: Offset(0, 3),
                     ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _locationText,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (_loading)
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                ),
               ),
             ),
 
-            const Divider(),
+            const SizedBox(height: 16),
+
+            /// Lista de imagens
             Expanded(
               child: _images.isEmpty
-                  ? const Center(child: Text('Nenhuma imagem.'))
+                  ? const Center(
+                      child: Text(
+                        'Nenhuma imagem.',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    )
                   : _buildImageList(),
             ),
           ],
@@ -201,69 +251,120 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  /// Botão estilizado
+  Widget _styledButton({
+    required IconData icon,
+    required String text,
+    required VoidCallback? onTap,
+    required Color color,
+  }) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        elevation: 4,
+        shadowColor: color.withOpacity(0.4),
+      ),
+      onPressed: onTap,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20, color: Colors.white),
+          const SizedBox(width: 8),
+          Text(text,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              )),
+        ],
+      ),
+    );
+  }
+
+  /// Lista horizontal estilizada
   Widget _buildImageList() {
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       itemCount: _images.length,
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       itemBuilder: (_, index) {
         final f = _images[index];
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Column(
-            children: [
-              GestureDetector(
-                onLongPress: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Remover imagem?'),
-                      content:
-                          const Text('Deseja excluir permanentemente?'),
-                      actions: [
-                        TextButton(
-                          child: const Text('Cancelar'),
-                          onPressed: () => Navigator.pop(context, false),
-                        ),
-                        TextButton(
-                          child: const Text('Excluir'),
-                          onPressed: () => Navigator.pop(context, true),
-                        ),
-                      ],
+          child: GestureDetector(
+            onLongPress: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Remover imagem?'),
+                  content: const Text('Deseja excluir permanentemente?'),
+                  actions: [
+                    TextButton(
+                      child: const Text('Cancelar'),
+                      onPressed: () => Navigator.pop(context, false),
                     ),
-                  );
-                  if (confirm == true) {
-                    await _removeImage(index);
-                  }
-                },
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => FullImagePage(file: f),
+                    TextButton(
+                      child: const Text('Excluir'),
+                      onPressed: () => Navigator.pop(context, true),
                     ),
-                  );
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    f,
-                    width: 140,
-                    height: 140,
-                    fit: BoxFit.cover,
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await _removeImage(index);
+              }
+            },
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FullImagePage(file: f),
+                ),
+              );
+            },
+            child: Column(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 7,
+                        color: Colors.black26,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      f,
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: 140,
-                child: Text(
-                  f.path.split('/').last,
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              )
-            ],
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: 150,
+                  child: Text(
+                    f.path.split('/').last,
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
+                )
+              ],
+            ),
           ),
         );
       },
