@@ -14,6 +14,7 @@ class AppFotosGeo extends StatelessWidget {
       title: 'App Fotos + Geolocalização',
       theme: ThemeData(primarySwatch: Colors.indigo),
       home: const HomePage(title: 'Fotos & Localização'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
