@@ -294,7 +294,7 @@ class _HomePageState extends State<HomePage> {
               child: _images.isEmpty
                   ? const Center(
                       child: Text(
-                        'Nenhuma imagem.',
+                        'Sem imagem.',
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w500,
